@@ -23,16 +23,16 @@ func main() {
 		panic(err)
 	}
 	// 初始化适配器
-	dis, err := dispatcher.NewChainDispatcher(conf)
+	dispatch, err := dispatcher.NewChainDispatcher(conf)
 	if err != nil {
 		log.Error("Setup dispatcher failed", "err", err)
 		panic(err)
 	}
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(dis.Interceptor))
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(dispatch.Interceptor))
 	defer grpcServer.GracefulStop()
 
-	account.RegisterWalletAccountServiceServer(grpcServer, dis) // 注册服务
+	account.RegisterWalletAccountServiceServer(grpcServer, dispatch) // 注册服务
 
 	listen, err := net.Listen("tcp", fmt.Sprintf(":"+conf.Server.Port))
 	if err != nil {

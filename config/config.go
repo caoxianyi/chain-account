@@ -23,27 +23,7 @@ type Node struct {
 }
 
 type WalletNode struct {
-	Eth     Node `yaml:"eth"`
-	Arbi    Node `yaml:"arbi"`
-	Op      Node `yaml:"op"`
-	Zksync  Node `yaml:"zksync"`
-	Bsc     Node `yaml:"bsc"`
-	Heco    Node `yaml:"heco"`
-	Avax    Node `yaml:"avax"`
-	Polygon Node `yaml:"polygon"`
-	Tron    Node `yaml:"tron"`
-	Sol     Node `yaml:"solana"`
-	Cosmos  Node `yaml:"cosmos"`
-	Aptos   Node `yaml:"aptos"`
-	Mantle  Node `yaml:"mantle"`
-	Scroll  Node `yaml:"scroll"`
-	Base    Node `yaml:"evmbase"`
-	Linea   Node `yaml:"linea"`
-	Sui     Node `yaml:"sui"`
-	Ton     Node `yaml:"ton"`
-	Xlm     Node `yaml:"xlm"`
-	Icp     Node `yaml:"icp"`
-	Btt     Node `yaml:"btt"`
+	Eth Node `yaml:"eth"`
 }
 
 type Config struct {

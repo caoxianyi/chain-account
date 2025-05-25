@@ -13,7 +13,7 @@ type IChainAdaptor interface {
 	GetAccount(req *account.AccountRequest) (*account.AccountResponse, error)                                  // 获取账户信息
 	GetFee(req *account.FeeRequest) (*account.FeeResponse, error)                                              // 获取手续费
 	SendTx(req *account.SendTxRequest) (*account.SendTxResponse, error)                                        // 发送交易
-	GetTxByAddress(req *account.TxAddressRequest) (*account.TxAddressResponse, error)                          //  获取地址交易信息
+	GetTxByAddress(req *account.TxAddressRequest) (*account.TxAddressResponse, error)                          // 获取地址交易信息
 	GetTxByHash(req *account.TxHashRequest) (*account.TxHashResponse, error)                                   // 获取交易信息
 	GetBlockByRange(req *account.BlockByRangeRequest) (*account.BlockByRangeResponse, error)                   // 获取区块信息
 	BuildUnSignTransaction(req *account.UnSignTransactionRequest) (*account.UnSignTransactionResponse, error)  // 构建未签名交易

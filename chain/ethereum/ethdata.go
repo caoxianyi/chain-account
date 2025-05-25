@@ -16,7 +16,7 @@ type EthData struct {
 
 // 初始化EthData
 func NewEthData(baseUrl, apiKey string, timeout time.Duration) (*EthData, error) {
-	ethScanCli, err := etherscan.NewChainExplorerAdaptor(apiKey, baseUrl, false, time.Duration(timeout))
+	ethScanCli, err := etherscan.NewChainExplorerAdaptor(apiKey, baseUrl, false, timeout)
 	if err != nil {
 		log.Error("New etherscan client fail", "err", err)
 		return nil, err

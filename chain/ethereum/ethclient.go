@@ -1,6 +1,7 @@
 package ethereum
 
 import (
+	"chain-account/common/util"
 	"context"
 	"errors"
 	"fmt"
@@ -133,6 +134,7 @@ func (e *EthClient) BlockHeaderByNumber(number *big.Int) (*types.Header, error) 
 		log.Warn("header not found")
 		return nil, ethereum.NotFound
 	}
+	fmt.Println("************", util.ToPrettyJSON(header))
 	return header, nil
 }
 
@@ -319,7 +321,7 @@ func (e *EthClient) TxCountByAddress(address common.Address) (hexutil.Uint64, er
 	return nonce, err
 }
 
-// 广播签名交易 rawTx: 16进制签名	交易提交 返回交易哈希
+// 广播签名交易 rawTx: 16进制签名 交易提交 返回交易哈希
 func (e *EthClient) SendRawTransaction(rawTx string) (*common.Hash, error) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), defaultRequestTimeout)
 	defer cancelFunc()

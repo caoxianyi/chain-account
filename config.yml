@@ -1,18 +1,27 @@
 server:
-  port: 8189
+  port: 8190
 
 network: mainnet
 
 chains: [Ethereum]
 
 wallet_node:
-  eth:
-    rpc_url: 'https://eth-mainnet.g.alchemy.com/v2/vWakrtQ1yQD77VsTLyNI4aGjiVx0ewhs'
-    rpc_user: ''
-    rpc_pass: ''
-    data_api_url: 'https://api.etherscan.io/api?'
-    data_api_key: 'CRNDNV3CSIB7NTSCY1GBJVQX4VIJVYQ73J'
-    data_api_token: ''
-    time_out: 30
+#  eth:
+#    rpc_url: 'https://eth-mainnet.g.alchemy.com/v2/vWakrtQ1yQD77VsTLyNI4aGjiVx0ewhs'
+#    rpc_user: ''
+#    rpc_pass: ''
+#    data_api_url: 'https://api.etherscan.io/api?'
+#    data_api_key: 'CRNDNV3CSIB7NTSCY1GBJVQX4VIJVYQ73J'
+#    data_api_token: ''
+#    time_out: 30
+
+    eth:
+      rpc_url: 'https://eth-sepolia.api.onfinality.io/public'
+      rpc_user: ''
+      rpc_pass: ''
+      data_api_url: 'https://api-sepolia.etherscan.io/api?'
+      data_api_key: 'CRNDNV3CSIB7NTSCY1GBJVQX4VIJVYQ73J'
+      data_api_token: ''
+      time_out: 30
 
 #rpc_url ： chainList上面找的节点+官网申请的key https://eth-mainnet.public.blastapi.io/CRNDNV3CSIB7NTSCY1GBJVQX4VIJVYQ73J

@@ -1,4 +1,4 @@
-go_xx:
+chain-account:
 	go build -o chain-account.exe
 
 clean:

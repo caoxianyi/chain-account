@@ -54,7 +54,6 @@ func BuildErc721Data(fromAddress, toAddress common.Address, tokenId *big.Int) []
 
 // 生成 未签名的传统以太坊交易（Legacy Transaction）的哈希
 // txData 传统交易数据结构
-// 区块链网络 ID（如以太坊主网为 1）。
 func CreateLegacyUnSignTx(txData *types.LegacyTx, chainId *big.Int) string {
 	tx := types.NewTx(txData)
 	signer := types.LatestSignerForChainID(chainId)
@@ -63,14 +62,13 @@ func CreateLegacyUnSignTx(txData *types.LegacyTx, chainId *big.Int) string {
 }
 
 // 创建符合EIP-1559标准的未签名交易的哈希
-// EIP-1559 动态费用交易数据结构
-// 区块链网络 ID（如以太坊主网为 1）。
+// 构建未签名的 rawTx 32位的massageHash
 func CreateEip1559UnSignTx(txData *types.DynamicFeeTx, chainId *big.Int) (string, error) {
 	tx := types.NewTx(txData)
-	// 签名者
+	// 序列化交易
 	signer := types.LatestSignerForChainID(chainId)
-	txHash := signer.Hash(tx)
-	return txHash.String(), nil
+	rawTx := signer.Hash(tx)
+	return rawTx.String(), nil
 }
 
 // 对传统以太坊交易（Legacy Transaction）进行签名并序列化
@@ -94,19 +92,19 @@ func CreateLegacySignedTx(txData *types.LegacyTx, signature []byte, chainId *big
 
 // 对符合 EIP-1559 标准的动态费用交易进行签名并序列化
 // EIP-1559 交易数据（含 GasTipCap、GasFeeCap 等）
-// 原始 ECDSA 签名（65 字节，R|S|V）
-// 区块链网络 ID（如以太坊主网为 1）。
 func CreateEip1559SignedTx(txData *types.DynamicFeeTx, signature []byte, chainId *big.Int) (types.Signer, *types.Transaction, string, string, error) {
 	tx := types.NewTx(txData)
+	// 序列化交易
 	signer := types.LatestSignerForChainID(chainId)
 	signedTx, err := tx.WithSignature(signer, signature)
 	if err != nil {
 		return nil, nil, "", "", errors.New("tx with signature fail")
 	}
+	// RLP 编码
 	signedTxData, err := rlp.EncodeToBytes(signedTx)
 	if err != nil {
 		return nil, nil, "", "", errors.New("encode tx to byte fail")
 	}
-	//用于验证签名的签名器实例、包含完整签名数据的交易对象、编码的原始交易数据、交易哈希（唯一标识）、err
+	//用于验证签名的签名器实例、包含完整签名数据的交易对象、编码的原始交易数据（用来广播）、交易哈希（唯一标识）、err
 	return signer, signedTx, "0x" + hex.EncodeToString(signedTxData)[4:], signedTx.Hash().String(), nil
 }

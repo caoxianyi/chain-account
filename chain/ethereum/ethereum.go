@@ -7,13 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec/v2"
+
 	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/btcsuite/btcd/btcec/v2"
 	account2 "github.com/dapplink-labs/chain-explorer-api/common/account"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -48,7 +49,7 @@ func NewChainAdaptor(con *config.Config) (chain.IChainAdaptor, error) {
 		return nil, err
 	}
 
-	ethData, err2 := NewEthData(dataApiUrl, dataApiKey, time.Second*15)
+	ethData, err2 := NewEthData(dataApiUrl, dataApiKey, time.Second*35)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -57,6 +58,8 @@ func NewChainAdaptor(con *config.Config) (chain.IChainAdaptor, error) {
 		EthData:   ethData,
 	}, nil
 }
+
+// 验证 是否满足当前节点
 func (c *ChainAdaptor) GetSupportChains(req *account.SupportChainsRequest) (*account.SupportChainsResponse, error) {
 	fmt.Println("进这里 2")
 	return &account.SupportChainsResponse{
@@ -66,6 +69,7 @@ func (c *ChainAdaptor) GetSupportChains(req *account.SupportChainsRequest) (*acc
 	}, nil
 }
 
+// 传入公钥 转换成地址
 func (c *ChainAdaptor) ConvertAddress(req *account.ConvertAddressRequest) (*account.ConvertAddressResponse, error) {
 	// 1. 处理 0x 前缀
 	publicKeyStr := strings.TrimPrefix(req.PublicKey, "0x")
@@ -99,6 +103,7 @@ func (c *ChainAdaptor) ConvertAddress(req *account.ConvertAddressRequest) (*acco
 	}, nil
 }
 
+// 地址格式验证
 func (c *ChainAdaptor) ValidAddress(req *account.ValidAddressRequest) (*account.ValidAddressResponse, error) {
 	if len(req.Address) != 42 || !strings.HasPrefix(req.Address, "0x") {
 		return &account.ValidAddressResponse{
@@ -123,6 +128,7 @@ func (c *ChainAdaptor) ValidAddress(req *account.ValidAddressRequest) (*account.
 	}
 }
 
+// 通过区块号获取区块数据
 func (c *ChainAdaptor) GetBlockByNumber(req *account.BlockNumberRequest) (*account.BlockResponse, error) {
 	block, err := c.EthClient.BlockByNumber(big.NewInt(req.Height))
 	if err != nil {
@@ -155,6 +161,7 @@ func (c *ChainAdaptor) GetBlockByNumber(req *account.BlockNumberRequest) (*accou
 	}, nil
 }
 
+// 通过区块Hash获取区块数据
 func (c *ChainAdaptor) GetBlockByHash(req *account.BlockHashRequest) (*account.BlockResponse, error) {
 	block, err := c.EthClient.BlockByHash(common.HexToHash(req.Hash))
 	if err != nil {
@@ -188,12 +195,13 @@ func (c *ChainAdaptor) GetBlockByHash(req *account.BlockHashRequest) (*account.B
 
 }
 
+// 通过区块号获取区块头信息
 func (c *ChainAdaptor) GetBlockHeaderByNumber(req *account.BlockHeaderNumberRequest) (*account.BlockHeaderResponse, error) {
 	var blockNumber *big.Int
 	if req.Height == 0 {
-		blockNumber = nil // return latest block
+		blockNumber = nil
 	} else {
-		blockNumber = big.NewInt(req.Height) // return special block by number
+		blockNumber = big.NewInt(req.Height)
 	}
 	blockInfo, err := c.EthClient.BlockHeaderByNumber(blockNumber)
 	if err != nil {
@@ -204,7 +212,7 @@ func (c *ChainAdaptor) GetBlockHeaderByNumber(req *account.BlockHeaderNumberRequ
 		}, nil
 	}
 	blockHead := &account.BlockHeader{
-		Hash:             blockInfo.Hash().String(),
+		Hash:             blockInfo.Hash().Hex(),
 		ParentHash:       blockInfo.ParentHash.String(),
 		UncleHash:        blockInfo.UncleHash.String(),
 		CoinBase:         blockInfo.Coinbase.String(),
@@ -232,6 +240,7 @@ func (c *ChainAdaptor) GetBlockHeaderByNumber(req *account.BlockHeaderNumberRequ
 	}, nil
 }
 
+// 通过区块Hash获取区块头信息
 func (c *ChainAdaptor) GetBlockHeaderByHash(req *account.BlockHeaderHashRequest) (*account.BlockHeaderResponse, error) {
 	blockInfo, err := c.EthClient.BlockHeaderByHash(common.HexToHash(req.Hash))
 	if err != nil {
@@ -270,6 +279,7 @@ func (c *ChainAdaptor) GetBlockHeaderByHash(req *account.BlockHeaderHashRequest)
 	}, nil
 }
 
+// 获取当前账户的信息
 func (c *ChainAdaptor) GetAccount(req *account.AccountRequest) (*account.AccountResponse, error) {
 	// 获取交易笔数 nonce
 	nonce, err := c.EthClient.TxCountByAddress(common.HexToAddress(req.Address))
@@ -306,6 +316,7 @@ func (c *ChainAdaptor) GetAccount(req *account.AccountRequest) (*account.Account
 	}, nil
 }
 
+// 获取fee
 func (c *ChainAdaptor) GetFee(req *account.FeeRequest) (*account.FeeResponse, error) {
 	gasPrice, err := c.EthClient.SuggestGasPrice()
 	if err != nil {
@@ -332,6 +343,7 @@ func (c *ChainAdaptor) GetFee(req *account.FeeRequest) (*account.FeeResponse, er
 	}, nil
 }
 
+// 广播交易
 func (c *ChainAdaptor) SendTx(req *account.SendTxRequest) (*account.SendTxResponse, error) {
 	transaction, err := c.EthClient.SendRawTransaction(req.RawTx)
 	if err != nil {
@@ -348,6 +360,7 @@ func (c *ChainAdaptor) SendTx(req *account.SendTxRequest) (*account.SendTxRespon
 	}, nil
 }
 
+// 通过地址获取交易记录
 func (c *ChainAdaptor) GetTxByAddress(req *account.TxAddressRequest) (*account.TxAddressResponse, error) {
 	var resp *account2.TransactionResponse[account2.AccountTxResponse]
 	var err error
@@ -385,6 +398,7 @@ func (c *ChainAdaptor) GetTxByAddress(req *account.TxAddressRequest) (*account.T
 	}, nil
 }
 
+// 按Hash获取交易详情
 func (c *ChainAdaptor) GetTxByHash(req *account.TxHashRequest) (*account.TxHashResponse, error) {
 	// 按Hash 获取交易详情
 	transaction, err := c.EthClient.TxByHash(common.HexToHash(req.Hash))
@@ -469,6 +483,7 @@ func (c *ChainAdaptor) GetTxByHash(req *account.TxHashRequest) (*account.TxHashR
 	}, nil
 }
 
+// 批量获取区块头信息
 func (c *ChainAdaptor) GetBlockByRange(req *account.BlockByRangeRequest) (*account.BlockByRangeResponse, error) {
 	startBlock := new(big.Int)
 	endBlock := new(big.Int)
@@ -516,7 +531,7 @@ func (c *ChainAdaptor) GetBlockByRange(req *account.BlockByRangeRequest) (*accou
 
 // 构建符合 EIP-1559 标准的未签名的交易
 func (c *ChainAdaptor) BuildUnSignTransaction(req *account.UnSignTransactionRequest) (*account.UnSignTransactionResponse, error) {
-	dFeeTx, _, err := c.buildDynamicFeeTx(req.Base64Tx)
+	dFeeTx, _, err := buildDynamicFeeTx(req.Base64Tx)
 	if err != nil {
 		log.Error("build dynamic fee tx fail", "err", err)
 		return &account.UnSignTransactionResponse{
@@ -544,7 +559,7 @@ func (c *ChainAdaptor) BuildUnSignTransaction(req *account.UnSignTransactionRequ
 
 // 构建并验证 EIP-1559 标准签名交易,将签名后的交易数据序列化，并验证签名地址的合法性
 func (c *ChainAdaptor) BuildSignedTransaction(req *account.SignedTransactionRequest) (*account.SignedTransactionResponse, error) {
-	dFeeTx, dynamicFeeTx, err := c.buildDynamicFeeTx(req.Base64Tx)
+	dFeeTx, dynamicFeeTx, err := buildDynamicFeeTx(req.Base64Tx)
 	if err != nil {
 		log.Error("build dynamic fee tx fail", "err", err)
 		return &account.SignedTransactionResponse{
@@ -577,6 +592,7 @@ func (c *ChainAdaptor) BuildSignedTransaction(req *account.SignedTransactionRequ
 
 	//	验证签名地址
 	sender, err := types.Sender(signer, signedTx)
+	fmt.Println("sender", sender)
 	if err != nil {
 		log.Error("get sender fail", "err", err)
 		return &account.SignedTransactionResponse{
@@ -624,10 +640,11 @@ func (c *ChainAdaptor) GetNftListByAddress(req *account.NftAddressRequest) (*acc
 	panic("implement me")
 }
 
-// 将Base64编码的EIP-1559交易请求转换为以太坊动态费用交易结构（DynamicFeeTx），支持ETH原生转账和ERC20转账。
-func (c *ChainAdaptor) buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, *Eip1559DynamicFeeTx, error) {
+// 将Base64编码的EIP-1559交易请求的Eip1559DynamicFeeTx结构体 转换为以太坊动态费用交易结构（DynamicFeeTx），支持ETH原生转账和ERC20转账。
+func buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, *Eip1559DynamicFeeTx, error) {
 	// 1. 将 Base64 字符串还原为原始 JSON 数据。
 	txReqJsonByte, err := base64.StdEncoding.DecodeString(base64Tx)
+
 	if err != nil {
 		log.Error("decode string fail", "err", err)
 		return nil, nil, err
@@ -639,6 +656,7 @@ func (c *ChainAdaptor) buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, 
 		log.Error("parse json fail", "err", err)
 		return nil, nil, err
 	}
+	fmt.Println("原始 JSON 数据", util.ToPrettyJSON(dynamicFeeTx))
 
 	// 3. 数值转换 将字符串形式的数值转换为 big.Int（以太坊数值类型）。
 	chainID := new(big.Int)
@@ -693,7 +711,7 @@ func (c *ChainAdaptor) buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, 
 		Data:      buildData,
 	}
 
-	//以太坊动态费用交易结构 、解析后的原始请求结构、err
+	// 以太坊动态费用交易结构 、解析后的原始请求结构、err
 	return dFeeTx, &dynamicFeeTx, nil
 }
 

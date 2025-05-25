@@ -46,15 +46,15 @@ func NewChainDispatcher(conf *config.Config) (*ChainDispatcher, error) {
 		ethereum.ChainName,
 	}
 
-	for _, c := range conf.Chains {
-		if factory, ok := chainAdaptorFactoryMap[c]; ok {
+	for _, chainName := range conf.Chains {
+		if factory, ok := chainAdaptorFactoryMap[chainName]; ok {
 			adaptor, err := factory(conf)
 			if err != nil {
-				log.Crit("failed to setup chain", "chain", c, "error", err)
+				log.Crit("failed to setup chain", "chain", chainName, "error", err)
 			}
-			dispatcher.registry[c] = adaptor
+			dispatcher.registry[chainName] = adaptor
 		} else {
-			log.Error("unsupported chain", "chain", c, "supportedChains", supportedChains)
+			log.Error("unsupported chain", "chain", chainName, "supportedChains", supportedChains)
 		}
 	}
 	return &dispatcher, nil
@@ -82,225 +82,225 @@ func (d *ChainDispatcher) Interceptor(ctx context.Context, req interface{}, info
 }
 
 // 预处理
-func (d *ChainDispatcher) preHandler(req interface{}) *CommonReply {
+func (d *ChainDispatcher) preHandler(req interface{}) (*CommonReply, string) {
 	chainName := req.(CommonRequest).GetChain()
 	if _, ok := d.registry[chainName]; !ok {
 		return &CommonReply{
 			Code:    global_const.ReturnCode_ERROR,
 			Msg:     config.UnsupportedOperation,
 			Support: false,
-		}
+		}, chainName
 	}
-	return nil
+	return nil, chainName
 }
 
 func (d *ChainDispatcher) GetSupportChains(ctx context.Context, request *account.SupportChainsRequest) (*account.SupportChainsResponse, error) {
 	fmt.Println("进这里 1")
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.SupportChainsResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  config.UnsupportedOperation,
 		}, nil
 	}
-	return d.registry[request.Chain].GetSupportChains(request)
+	return d.registry[chainName].GetSupportChains(request)
 }
 
 func (d *ChainDispatcher) ConvertAddress(ctx context.Context, request *account.ConvertAddressRequest) (*account.ConvertAddressResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.ConvertAddressResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "covert address fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].ConvertAddress(request)
+	return d.registry[chainName].ConvertAddress(request)
 }
 func (d *ChainDispatcher) ValidAddress(ctx context.Context, request *account.ValidAddressRequest) (*account.ValidAddressResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.ValidAddressResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "valid address error at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].ValidAddress(request)
+	return d.registry[chainName].ValidAddress(request)
 }
 
 func (d *ChainDispatcher) GetBlockByNumber(ctx context.Context, request *account.BlockNumberRequest) (*account.BlockResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.BlockResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get block by number fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetBlockByNumber(request)
+	return d.registry[chainName].GetBlockByNumber(request)
 }
 
 func (d *ChainDispatcher) GetBlockByHash(ctx context.Context, request *account.BlockHashRequest) (*account.BlockResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.BlockResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get block by hash fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetBlockByHash(request)
+	return d.registry[chainName].GetBlockByHash(request)
 }
 
 func (d *ChainDispatcher) GetBlockHeaderByHash(ctx context.Context, request *account.BlockHeaderHashRequest) (*account.BlockHeaderResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.BlockHeaderResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get block header by hash fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetBlockHeaderByHash(request)
+	return d.registry[chainName].GetBlockHeaderByHash(request)
 }
 
 func (d *ChainDispatcher) GetBlockHeaderByNumber(ctx context.Context, request *account.BlockHeaderNumberRequest) (*account.BlockHeaderResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.BlockHeaderResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get block header by number fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetBlockHeaderByNumber(request)
+	return d.registry[chainName].GetBlockHeaderByNumber(request)
 }
 
 func (d *ChainDispatcher) GetBlockHeaderByRange(ctx context.Context, request *account.BlockByRangeRequest) (*account.BlockByRangeResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.BlockByRangeResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get block range header fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetBlockByRange(request)
+	return d.registry[chainName].GetBlockByRange(request)
 }
 
 func (d *ChainDispatcher) GetAccount(ctx context.Context, request *account.AccountRequest) (*account.AccountResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.AccountResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get account information fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetAccount(request)
+	return d.registry[chainName].GetAccount(request)
 }
 
 func (d *ChainDispatcher) GetFee(ctx context.Context, request *account.FeeRequest) (*account.FeeResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.FeeResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get fee fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetFee(request)
+	return d.registry[chainName].GetFee(request)
 }
 
 func (d *ChainDispatcher) SendTx(ctx context.Context, request *account.SendTxRequest) (*account.SendTxResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.SendTxResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "send tx fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].SendTx(request)
+	return d.registry[chainName].SendTx(request)
 }
 
 func (d *ChainDispatcher) GetTxByAddress(ctx context.Context, request *account.TxAddressRequest) (*account.TxAddressResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.TxAddressResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get tx by address fail pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetTxByAddress(request)
+	return d.registry[chainName].GetTxByAddress(request)
 }
 
 func (d *ChainDispatcher) GetTxByHash(ctx context.Context, request *account.TxHashRequest) (*account.TxHashResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.TxHashResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get tx by hash fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetTxByHash(request)
+	return d.registry[chainName].GetTxByHash(request)
 }
 
 func (d *ChainDispatcher) GetBlockByRange(ctx context.Context, request *account.BlockByRangeRequest) (*account.BlockByRangeResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.BlockByRangeResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get blcok by range fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetBlockByRange(request)
+	return d.registry[chainName].GetBlockByRange(request)
 }
 
 func (d *ChainDispatcher) BuildUnSignTransaction(ctx context.Context, request *account.UnSignTransactionRequest) (*account.UnSignTransactionResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.UnSignTransactionResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get un sign tx fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].BuildUnSignTransaction(request)
+	return d.registry[chainName].BuildUnSignTransaction(request)
 }
 
 func (d *ChainDispatcher) BuildSignedTransaction(ctx context.Context, request *account.SignedTransactionRequest) (*account.SignedTransactionResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.SignedTransactionResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "signed tx fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].BuildSignedTransaction(request)
+	return d.registry[chainName].BuildSignedTransaction(request)
 }
 
 func (d *ChainDispatcher) DecodeTransaction(ctx context.Context, request *account.DecodeTransactionRequest) (*account.DecodeTransactionResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.DecodeTransactionResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "decode tx fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].DecodeTransaction(request)
+	return d.registry[chainName].DecodeTransaction(request)
 }
 
 func (d *ChainDispatcher) VerifySignedTransaction(ctx context.Context, request *account.VerifyTransactionRequest) (*account.VerifyTransactionResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.VerifyTransactionResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "verify tx fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].VerifySignedTransaction(request)
+	return d.registry[chainName].VerifySignedTransaction(request)
 }
 
 func (d *ChainDispatcher) GetExtraData(ctx context.Context, request *account.ExtraDataRequest) (*account.ExtraDataResponse, error) {
-	resp := d.preHandler(request)
+	resp, chainName := d.preHandler(request)
 	if resp != nil {
 		return &account.ExtraDataResponse{
 			Code: global_const.ReturnCode_ERROR,
 			Msg:  "get extra data fail at pre handle",
 		}, nil
 	}
-	return d.registry[request.Chain].GetExtraData(request)
+	return d.registry[chainName].GetExtraData(request)
 }
 
 func (d *ChainDispatcher) GetNftListByAddress(ctx context.Context, request *account.NftAddressRequest) (*account.NftAddressResponse, error) {
